@@ -337,6 +337,56 @@ func (m *Manager) GenerateAccessToken(gt oauth2.GrantType, tgr *oauth2.TokenGene
 	return
 }
 
+func (m *Manager) ManualGenerateToken(user_id string, client_id string, client_secret string, expires_in int64) (accessToken oauth2.TokenInfo, err error) {
+	cli, err := m.GetClient(client_id)
+
+	ti := models.NewToken()
+	ti.SetClientID(client_id)
+	ti.SetUserID(user_id)
+	ti.SetRedirectURI("http://localhost")
+	ti.SetScope("")
+
+	createAt := time.Now()
+	ti.SetAccessCreateAt(createAt)
+
+	// set access token expires
+	gcfg := m.grantConfig("password")
+	aexp := gcfg.AccessTokenExp
+
+	ti.SetAccessExpiresIn(expires_in)
+	if gcfg.IsGenerateRefresh {
+		ti.SetRefreshCreateAt(createAt)
+		ti.SetRefreshExpiresIn(gcfg.RefreshTokenExp)
+	}
+
+	td := &oauth2.GenerateBasic{
+		Client:    cli,
+		UserID:    user_id,
+		CreateAt:  createAt,
+		TokenInfo: ti,
+		Request:   nil,
+	}
+
+	av, rv, terr := m.accessGenerate.Token(td, gcfg.IsGenerateRefresh)
+	if terr != nil {
+		err = terr
+		return
+	}
+	ti.SetAccess(av)
+
+	if rv != "" {
+		ti.SetRefresh(rv)
+	}
+
+	err = m.tokenStore.Create(ti)
+	if err != nil {
+		return
+	}
+	accessToken = ti
+
+	return
+}
+
 // RefreshAccessToken refreshing an access token
 func (m *Manager) RefreshAccessToken(tgr *oauth2.TokenGenerateRequest) (accessToken oauth2.TokenInfo, err error) {
 	cli, err := m.GetClient(tgr.ClientID)
