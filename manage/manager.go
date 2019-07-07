@@ -351,7 +351,6 @@ func (m *Manager) ManualGenerateToken(user_id string, client_id string, client_s
 
 	// set access token expires
 	gcfg := m.grantConfig("password")
-	aexp := gcfg.AccessTokenExp
 
 	ti.SetAccessExpiresIn(expires_in)
 	if gcfg.IsGenerateRefresh {
