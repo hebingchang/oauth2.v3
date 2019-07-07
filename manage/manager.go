@@ -337,7 +337,7 @@ func (m *Manager) GenerateAccessToken(gt oauth2.GrantType, tgr *oauth2.TokenGene
 	return
 }
 
-func (m *Manager) ManualGenerateToken(user_id string, client_id string, client_secret string, expires_in int64) (accessToken oauth2.TokenInfo, err error) {
+func (m *Manager) ManualGenerateToken(user_id string, client_id string, client_secret string, expires_in time.Duration) (accessToken oauth2.TokenInfo, err error) {
 	cli, err := m.GetClient(client_id)
 
 	ti := models.NewToken()
